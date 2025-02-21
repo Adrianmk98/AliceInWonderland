@@ -1,0 +1,717 @@
+//: Assignment4.cpp
+
+/*
+ Title: Assignment4.cpp
+ Description: Alice in Wonderland Game
+ Date: August 26, 2024
+ Author: Adrian Krzyzanowski
+*/
+
+/*
+ DOCUMENTATION
+
+ Program Purpose:
+ 	This program allows the user to play through the eyes of Alice as she tries to get into wonderland. It is a twist on the beginning of the wonderland story since it is more about the journey to get there rather than wonderland itself.PLayers
+ 	are able to use items, and speak to characters as well as exploring more of the world in an effort to get into wonderland itself.
+
+ Compile (assuming Cygwin is running): g++ -o Assignment4 Assignment4.cpp
+ Execution (assuming Cygwin is running): ./Assignment4.exe
+
+ Notes: in Cygwin, main must return type int
+
+ Classes: Item,Character,Story,Action,Location,Player,Wonderland
+
+ Variables:
+
+ 	Alice_size - int - used to store Alices size so that we know if she has drank the potion
+ 	key_Taken - boolean - checks to see if the key was taken or not.
+ 	name(Item Class) - string - gets the name of items
+ 	description(Item Class) - string - gets the description of an item
+ 	itemLocation - int - gets the locationID of the item
+ 	iditem - int - gets the id of the item as a substitute
+ 	name(Character Class) - string - gets the name of the character
+ 	description(Character Class) - string - gets the description of the character
+ 	dialogue - string - gets the dialogue from the character
+ 	location - int - locationid of the character
+ 	locationID(Story Class) - int - get the locationID of where the player is.
+    action - string - gets the name of the action the user is taking.
+    actionDesc - string - gets the description of the action for the help action
+    type - string - gets the action type and what it interacts with him
+    restrict - string - gets the restriction of each item
+    name(Location Class) - string - gets the name of the location
+    ID(Location Class) - int - gets the locationID
+    visit - int - returns if the player has already been in a certain location as necessary
+    exits - map<string, Location*> - returns the exits of each location
+    inventory - vector<Item> - refers to the users inventory
+    line(Wonderland Class) - string - refers to the line that comes in from the text file. This one refers to items.
+    iparts - vector<string> - used to store the parts that come in from the text file.
+    itemName(Wonderland Class) - string& - gets the itemName from the text file
+    itemDescription(Wonderland Class) - string& - gets the itemDescription from the text file
+    itemLocation(Wonderland Class) - int - used to get the location of the item from the text file
+    itemID(Wonderland Class) - int - used to get the ID of the item from the text file
+    characterInfos - vector<string> - used to store character information from the text file.
+    characterInfo - string - used to store the pieces of character information that are passed from the text file.
+    charName - string& - stores the name from the character text file
+    charDescription - string& - gets the character description from the text file
+    charDialogue - string& - gets the character dialogue from the text file
+    charLocation - int - gets the location of the character from the text file
+    lparts - vector<string> - used to store information with regard to locations from the text file
+    lpart - string - takes the pieces of information as required.
+    id - int - gets the location ID from the text file and converts it to an int
+    locName - string& - stores the name of the location from the text file
+    locDesc - string& - stores the description of the name of the location
+    exits - string& - stores the exits of the location as a whole
+    visit - int - stores if the location was visited
+    exit - string - stores the exit that is being formated
+    direction - string - gets the direction that a particular exit is tied to
+    exitID - int - pulls the ID of the exit from all the exits at that location
+    actionPart - vector<string> - gets the actions from the text file
+    actionsInfo - string - gets each action seperately
+    actionName - string& - gets the action name from the text file
+    actionDescription - string& - gets the description of the action from the text file
+    objectUsed - string& - gets what the action can be used for from the text file
+    restriction - string& - gets the action restrictions from the text file
+    playerLocation - Location* - allows for the setting and getting of the players location using the location ID
+    characters - vector<Character> - holds all the character information
+    items - vector<Item> - stores the information for items after it has been formatted
+    Action - vector<Action> - stores the information for actions once formatted
+    player - Player* - creates the player object
+    locations - map<int,Location*> - stores the ID and
+    exitData - map<int,string> - stores the exitData
+    display - boolean - checks to see if current location needs to be shown.
+    player - Player - the player object
+    currentLocationID - int - gets the current location where the user is
+    userInput - string - gets the users input for actions
+    takeItemID - int - if the input is numeral then it checks the takeItemID
+    userItem - string - gets the item the user
+    chosenItem - string - gets which item the user is dropping
+*/
+
+/*
+ TEST PLAN
+All cases begin with:
+Hello and welcome to this wonderland game. You are Alice. Your goal is to progress through the world and get to wonderland. If you need help just use it as an action and I will give you help.
+Press <Enter> to continue...
+
+Location Name: River Side
+You are beside the river with your sister
+What do you want to do?
+
+
+ Normal case:
+
+    >What do you want to do?:  help
+    >The following are possible actions
+    >take  Pick up an item from the location
+    >drop  Drop an item from the inventory
+    >move  Move to a different location
+    >look  Look around the current location
+    >talk  Talk to a character
+    >use  Use an item
+    >inventory  Check the current inventory
+    >help  Show available actions
+    >quit quits from the game
+    --------------------------------------
+    >Location Name: River Side
+    >You are beside the river with your sister
+    >What do you want to do?
+
+    >Various different options are normal cases such as:
+    >What do you want to do?: move
+    >You can go to Above Ground by going [e] You can go to Town by going [n] You can go to River by going [w]
+    >--------------------------------------
+    >Where are you moving?: e
+    >--------------------------------------
+    >Location Name: Above Ground
+    >You are above the ground near a rabbit hole.
+    >What do you want to do?
+
+
+
+ Bad Data case 1 (Bad location change)
+ 	>What do you want to do?: move
+    >You can go to Above Ground by going [e] You can go to Town by going [n] You can go to River by going [w]
+    >--------------------------------------
+    >Where are you moving?: 7
+    >invalid location--------------------------------------
+    >Location Name: River Side
+    >You are beside the river with your sister
+    >What do you want to do?
+
+ Bad Data case 2 (Taking Item which isnt at location)
+>What do you want to do?:take
+>What would you like to take?
+>Items at River Side:
+>[1]Flashlight: This allows you to see in the dark.
+>[8]book: The book I was reading
+>:key
+>This item does not exist here
+>--------------------------------------
+>Location Name: River Side
+>You are beside the river with your sister
+>What do you want to do?
+
+
+ Bad Data case 3 (Taking Item which doesnt exist)
+>What do you want to do?:take
+>What would you like to take?
+>Items at River Side:
+>[1]Flashlight: This allows you to see in the dark.
+>[8]book: The book I was reading
+>:spaghetti
+>This item does not exist here
+>--------------------------------------
+>Location Name: River Side
+>You are beside the river with your sister
+>What do you want to do?
+
+
+ Discussion:
+ 	The program allows the user to go through the entry phases into wonderland.
+ 	To do this they might need to do various things such as talk to the other characters, user items in order to help them progress and make it into wonderland
+
+*/
+
+    #include <iostream>
+    #include <string>
+    #include <map>
+    #include <vector>
+    #include <algorithm>
+    #include <fstream>
+    #include <sstream>
+    #include <limits>
+    #include <chrono>
+    #include <iomanip>
+    int Alice_size = 1;//Tracks Alice Size
+    bool key_Taken=false;//Tracks if key taken or not
+    using namespace std;
+    class Item {
+    public:
+        Item(const string& itemName, const string& itemDescription, int itemLocation,int idItem) : name(itemName), description(itemDescription),itemlocation(itemLocation),iditem(idItem) {}
+        string getName() const {return name;}
+        string getDescription() const {return description;}
+        void setItemLocation(int newLocationID) {
+            itemlocation = newLocationID;
+        }
+        int getitemLocation() const{return itemlocation;}
+        int getitemID() const{return iditem;}
+        bool operator==(const Item& other) const {return name == other.name && description == other.description && itemlocation == other.itemlocation && iditem == other.iditem;}
+    private:
+        string name;
+        string description;
+        int itemlocation;
+        int iditem;
+    };
+    class Character {
+    public:
+        Character(const string& charName, const string& charDescription, const string& charDialogue,int charLocation) : name(charName), description(charDescription),dialogue(charDialogue),location(charLocation) {}
+        string getName() const {return name;}
+        string getDescription() const {return description;}
+        string getDialogue() const {return dialogue;}
+        int getCharLocation()const{return location;}
+        void setCharLocation(int newLocationID) {
+            location = newLocationID;
+        }
+    private:
+        string name;
+        string description;
+        string dialogue;
+        int location;
+    };
+    class Story;
+
+    class Story {
+    public:
+        Story(const int locID, Character& character) : locationID(locID), character(character) {}
+
+        void moverabbit()
+        {
+            character.setCharLocation(4);
+        }
+
+    private:
+        int locationID;
+        Character& character;
+    };
+
+    class Action{
+    public:
+        Action(const string& ActionName,const string& ActionDescription,const string& objType,const string& restrict) : action(ActionName),actionDesc(ActionDescription),type(objType),restrict(restrict) {}
+        string getAction() const {return action;}
+        string getDescription() const{return actionDesc;}
+        string getType() const{return type;}
+        string getRestriction()const{return restrict;}
+    private:
+        string action;
+        string actionDesc;
+        string type;
+        string restrict;
+    };
+
+    class Location {
+    public:
+        Location(const string& locName, const string& locDescription, int locID,int visit) : name(locName), description(locDescription), ID(locID),visit(visit) {}
+        void addExit(const string& direction, Location& destination) {exits[direction] = &destination;}
+        void setVisit() {
+            visit = 1;
+        }
+        string getName() const {return name;}
+        string getDescription() const {return description;}
+        int getID() const {return ID;}
+        int getVisit() const{return visit;}
+        map<string, Location*>& getExits() {return exits;}
+        void printExits() const {
+            for (const auto& exit : exits) {
+                cout << "You can go to " << exit.second->getName() << " by going [" << exit.first << "] ";
+                //cout << "Direction: " << exit.first << " -> Destination: " << exit.second->getName() << endl;
+            }
+            cout << endl;
+            cout << "--------------------------------------" << endl;
+        }
+    private:
+        string name;
+        string description;
+        int ID;
+        int visit;
+        map<string, Location*> exits;
+    };
+    /*
+     * Class inputCorrection
+     * Takes the input from the user and formats it so that different inputs are more possible.
+     */
+
+    class Player {
+    public:
+        void take(const Item& item) {inventory.push_back(item);}
+        void drop(const Item& item) {inventory.erase(remove(inventory.begin(), inventory.end(), item), inventory.end());}
+        void printInventory() const {
+            if (!inventory.empty()) {
+                cout << "Inventory:" << endl;
+                for (const auto& item : inventory) {
+                    cout << "["<< item.getitemID() <<"]" <<item.getName() << endl;
+                }} else {cout << "Inventory is empty." << endl;}}
+    private:
+        vector<Item> inventory;
+
+    };
+    /*
+     * Class Wonderland
+     * Loads in all of the text file for game start
+     */
+    class Wonderland {
+    public:
+
+        Wonderland() {
+            // Create items
+            ifstream itemFile("item.txt");
+            if (!itemFile.is_open()) {
+                cerr << "Failed to open file" << endl;
+            }
+
+            string line;
+            while (getline(itemFile, line)) {
+                vector<string> iparts;
+                stringstream ss(line);
+                string ipart;
+                while (getline(ss, ipart, '|')) {
+                    iparts.push_back(ipart);
+                }
+                const string& itemName = iparts[0];
+                const string& itemDescription = iparts[1];
+                int itemLocation = stoi(iparts[2]);
+                int itemID = stoi(iparts[3]);
+                items.emplace_back(itemName, itemDescription,itemLocation,itemID);
+            }
+            itemFile.close();
+
+            ifstream characterFile("character.txt");
+            if (!characterFile.is_open()) {
+                cerr << "Failed to open file" << endl;
+            }
+
+            line="";
+            while (getline(characterFile, line)) {
+                vector<string> characterInfos;
+                stringstream ss(line);
+                string characterInfo;
+                while (getline(ss, characterInfo, '|')) {
+                    characterInfos.push_back(characterInfo);
+                }
+                const string& charName = characterInfos[0];
+                const string& charDescription = characterInfos[1];
+                const string& charDialogue = characterInfos[2];
+                int charLocation = stoi(characterInfos[3]);
+                characters.emplace_back(charName, charDescription,charDialogue,charLocation);
+            }
+            characterFile.close();
+
+            line="";
+            ifstream locationFile("location.txt");
+            if (!locationFile.is_open()) {
+                cerr << "Unable to open file" << endl;
+            }
+
+            while (getline(locationFile, line)) {
+                vector<string> lparts;
+                stringstream ss(line);
+                string lpart;
+                while (getline(ss, lpart, '|')) {
+                    lparts.push_back(lpart);
+                }
+                if (lparts.size() < 4) {
+                    cerr << "Line doesn't contain enough parts: " << line << endl;
+                    continue;
+                }
+                int id = stoi(lparts[0]);
+                const string& locName = lparts[1];
+                const string& locDesc = lparts[2];
+                const string& exits = lparts[3];
+                int visit = stoi(lparts[4]);
+                locations[id] = new Location(locName, locDesc, id,visit);
+                // Store exits temporarily
+                exitData[id] = exits;
+            }
+            locationFile.close();
+            // Define location exits
+            for (const auto& [id, location] : locations) {
+                stringstream exitStream(exitData[id]);
+                string exit;
+                while (getline(exitStream, exit, ',')) {
+                    size_t colonPos = exit.find(':');
+                    if (colonPos != string::npos && reinterpret_cast<const char *>(colonPos) != "x") {
+                        string direction = exit.substr(0, colonPos);
+                        int exitID = stoi(exit.substr(colonPos + 1));
+                        location->addExit(direction, *locations[exitID]);
+                    }
+                }
+            }
+
+            ifstream actionFile("action.txt");
+            if (!actionFile.is_open()) {
+                cerr << "Failed to open file" << endl;
+            }
+
+            line="";
+            while (getline(actionFile, line)) {
+                vector<string> actionPart;
+                stringstream ss(line);
+                string actionInfo;
+                while (getline(ss, actionInfo, '|')) {
+                    actionPart.push_back(actionInfo);
+                }
+                const string& actionName = actionPart[0];
+                const string& actionDescription = actionPart[1];
+                const string& objectUsed = actionPart[2];
+                const string& restriction = actionPart[3];
+                Action.emplace_back(actionName, actionDescription,objectUsed,restriction);
+            }
+            actionFile.close();
+            // Initialize player
+            player = new Player();
+            playerLocation = locations[1];
+        }
+        ~Wonderland() {
+            delete player;
+            for (auto& location : locations) {
+                delete location.second;
+            }
+        }
+        Location* getPlayerLocation() const {
+            return playerLocation;
+        }
+        Player* getPlayer() const {
+            return player;
+        }
+        void setPlayerLocation(int locationID) {
+                playerLocation = locations[locationID];
+        }
+
+        Location* getLocationById(int locID) {
+            auto it = locations.find(locID);
+            if (it != locations.end()) {
+                return it->second;
+            }
+            return nullptr; // Return nullptr if not found
+        }
+        Location* playerLocation;
+        vector<Character> characters;
+        vector<Item> items;
+        vector<Action> Action;
+    private:
+
+        Player* player;
+
+        map<int, Location*> locations;
+        map<int, string> exitData;
+    };
+
+    class Control {
+    public:
+        Control(Wonderland* wonderland) : game(wonderland) {}
+    /*
+     * Runs the game and allows the inputs for the user.
+     * It gathers information and calls the appropriate methods and classes
+     */
+
+        void runGame(){
+            Player player;
+            bool display = true;
+            cout << "Hello and welcome to this wonderland game. You are Alice. Your goal is to progress through the world and get to wonderland. If you need help just use it as an action and I will give you help."<< endl;
+            cout << "Press <Enter> to continue..." << endl;//Wait until user continues
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');//wait until enter is pressed
+            while (true) {//As long as the game is going we keep allowing someone to go through options
+                Location *currentLocation = game->getPlayerLocation();
+                if (display = true) {//Only display when we want it. (Constantly displaying location is annoying)
+                    cout << "-------------------------------------- " << endl;
+                    cout << "Location Name: " << currentLocation->getName() << endl;
+                    cout << currentLocation->getDescription() << endl;
+                    //Alice_size=1;
+                }
+                display = false;//Stop displaying location
+                int currentLocationID = currentLocation->getID();//Current location is wherever we are.
+                string userInput;
+                string userInteract;
+                cout << "What do you want to do? ";
+                getline(cin, userInput);
+
+                for (const auto &action : game->Action) {
+                    if (action.getAction() == userInput) {
+                        //Something from the actionlist
+                        if (userInput == "quit") {
+                            break;
+                        } else if (userInput == "help") {//Prints the help info
+                            cout << "The following are possible actions" << endl;
+                            for (const auto &action : game->Action) {
+                                cout << action.getAction() << " " << action.getDescription() << endl;
+                            }
+
+                        }else if (userInput == "inventory") {//Prints the inventory
+                            player.printInventory();
+
+                        }else if (userInput == "use") {//Prints the inventory
+                            cout << "which item would you like to use?" << endl;
+                            player.printInventory();
+                            getline(cin, userInteract);
+                            for (auto& item : game->items) {
+                                if (item.getName() == userInteract) {
+                                    int itemId=item.getitemID();
+                                    itemUse(userInteract,currentLocationID,itemId);
+                                    break; // Break out of the loop once the item is taken
+                                }
+                            }
+
+                        } else if (userInput == "move"){
+                            currentLocation->printExits();
+                            cout << "Where are you moving?";
+                            getline(cin, userInteract);
+                            if(currentLocation->getExits().find(userInteract) !=
+                                   currentLocation->getExits().end())//If user typed location exit that exists
+                            {
+                                game->setPlayerLocation(currentLocation->getExits().at(userInteract)->getID());
+                                currentLocation->setVisit();
+                            }else if(userInteract=="north" || userInteract=="south" || userInteract=="east" || userInteract=="west" || userInteract=="down" || userInteract=="up")//if not just first letter typed
+                            {
+                                userInteract = userInteract.substr(0, 1);
+                                if(currentLocation->getExits().find(userInteract) !=
+                                   currentLocation->getExits().end())//If user typed location exit that exists
+                                {
+                                    game->setPlayerLocation(currentLocation->getExits().at(userInteract)->getID());
+                                    currentLocation->setVisit();
+                                }
+                            }else{
+                                cout << "invalid location";
+                            }
+                        } else if (userInput == "talk") {
+                            cout << "Who would you like to speak to? " << endl;
+                            cout << "These characters are at your location:  " << currentLocation->getName() << " " << endl;
+                            for (const auto &character: game->characters) {
+                                if (character.getCharLocation() == currentLocationID) {
+                                    cout << character.getName() << ": " << character.getDescription() << endl;
+                                }
+                            }
+                            getline(cin, userInteract);
+                            for (const auto &character: game->characters) {
+                                if (character.getName() == userInteract) {
+                                    cout << character.getDialogue() << endl;
+                                }
+                            }
+
+                        } else if (userInput == "look") {
+
+                            cout << "Items at " << currentLocation->getName() << ":" << endl;
+                            for (const auto& item : game->items) {
+                                if (item.getitemLocation() == currentLocationID) {
+                                    cout << "["<< item.getitemID() <<"]" << item.getName() << ": " << item.getDescription() << endl;
+                                }
+                            }
+                            cout << "Characters at " << currentLocation->getName() << ":" << endl;
+                            for (const auto& character : game->characters) {
+                                if (character.getCharLocation() == currentLocationID) {
+                                    cout << character.getName() << ": " << character.getDescription() << endl;
+                                }
+                            }
+                            display = true;
+                        } else if (userInput == "take") {
+                            cout << "What would you like to take? " << endl;
+                            cout << "Items at " << currentLocation->getName() << ":" << endl;
+                            for (const auto& item : game->items) {
+                                if (item.getitemLocation() == currentLocationID) {
+                                    cout << "["<< item.getitemID() <<"]" << item.getName() << ": " << item.getDescription() << endl;
+                                }
+                            }
+                            int takeItemID;//The ID of the item instead of name
+                            getline(cin, userInteract);
+
+
+                            stringstream ss(userInteract);
+                            // Check if the input is an integer
+                            if (ss >> takeItemID && ss.eof()) {
+                                takeItemID = stoi(userInteract);
+                            } else {
+                            }
+                            bool hit=false;
+                            for (auto& item : game->items) {
+                                if (item.getitemLocation() == currentLocationID && item.getName() == userInteract) {
+                                    player.take(item);
+                                    hit=true;
+                                    cout << "You have taken " << item.getName() << endl;
+                                    if(item.getName()=="key"){
+                                        key_Taken=true;
+                                    }
+                                    break; // Break out of the loop once the item is taken
+                                }else if(item.getitemLocation() == currentLocationID && item.getitemID() == takeItemID)
+                                {
+                                    player.take(item);
+                                    hit=true;
+                                    cout << "You have taken " << item.getName() << endl;
+                                }
+                            }
+                            if(hit==false)
+                            {
+                                cout << "This item does not exist here" << endl;
+                            }
+
+                            // Second loop: update the item location
+                            for (auto& item : game->items) {
+                                if (item.getitemLocation() == currentLocationID && item.getName() == userInteract) {
+                                    item.setItemLocation(0);
+                                    break; // Break out of the loop once the item location is updated
+                                }
+                            }
+                        } else if (userInput == "drop") {
+
+                            cout << "The following are your items " << endl;
+                            player.printInventory();//prints items so user is able to get them
+                                cout << "Which item would you like to drop?" << endl;
+                            int takeItemID;//The ID of the item instead of name
+                            getline(cin, userInteract);
+                            stringstream ss(userInteract);
+                            // Check if the input is an integer
+                            if (ss >> takeItemID && ss.eof()) {
+                                takeItemID = stoi(userInteract);
+                            } else {
+                            }
+                            bool hit=false;
+                                for (auto& item : game->items) {
+                                    if (item.getitemID() == takeItemID || item.getName() == userInteract) {
+                                        player.drop(item);
+                                        hit=true;
+                                        cout << "You have dropped " << item.getName() << endl;
+                                        if(item.getName()=="key"){
+                                            key_Taken=false;//If key is dropped key taken no longer true
+                                        }
+                                        break; // Break out of the loop once the item is taken
+                                    }
+                                }
+
+                                // Second loop: update the item location
+                                for (auto& item : game->items) {
+                                    if (item.getitemLocation() == currentLocationID && item.getitemID() == takeItemID) {
+                                        item.setItemLocation(currentLocationID);
+                                        break; // Break out of the loop once the item location is updated
+                                    }
+                                }
+                                if(hit==false){
+                                    cout << "You cant drop that" << endl;
+                                }
+                        }
+                    }
+                }
+            }
+        }
+        void itemUse(string item,int currentLocationID,int itemID)
+        {
+            Location *currentLocation = game->getPlayerLocation();
+    /*
+     * If interacted item is flashlight and you are at the hallway, an exit is added to allow leaving the location. This is only available if you have the flashlight so it blocks the user from going back without it
+     */
+        if((item=="Flashlight" || itemID==1) && currentLocationID==7){
+            Location* location6Ptr = game->getLocationById(5);
+            currentLocation->addExit("u", *location6Ptr);
+
+        }else if(item=="drink me potion" || itemID==5){
+            /*
+             * if alice is shrunk then she cannot get the key. The key is removed and she is able to access the eat me cake
+             */
+        cout << "Alice shrinks" << endl;
+            Alice_size=0;
+            for (auto& item : game->items) {
+                if (item.getName() == "key") {//if the key was taken it wont exist for this. Otherwise moved out of gamebounds
+                    item.setItemLocation(0);
+                }
+                if (item.getName() == "eat me cake") {//Makes the cake appear for the user
+                    item.setItemLocation(7);
+                }
+            }
+        }else if((item=="eat me cake" || itemID==6)&& key_Taken==false) {//If you eat the cake and havent taken the key it reappears
+            Alice_size=1;
+            cout << "Alice grows" << endl;
+            for (auto &item: game->items) {
+                if (item.getName() == "key") {
+                    item.setItemLocation(7);
+                }
+            }
+        }
+        else if((item=="eat me cake" || itemID==6)&& key_Taken==true){//if you took the key already Alice just grows
+            Alice_size=1;
+            cout << "Alice grows" << endl;
+        }else if((item=="key" || itemID==7) && Alice_size==0 && currentLocationID==7){//if you use key while shrunk it adds an entrance
+            Location* location8Ptr = game->getLocationById(8);
+            currentLocation->addExit("e", *location8Ptr);
+            cout << "A small door appears to have opened" << endl;
+        }else if((item=="key" || itemID==7) && Alice_size==1 && currentLocationID==7){//if you use key while shrunk it adds an entrance
+            cout << "Looks like this would open a door but you are too big to enter" << endl;
+        }else if((item=="key" || itemID==7) && Alice_size==1 && currentLocationID!=7){//if you use key while shrunk it adds an entrance
+            cout << "Looks like this would open a door but there is no door to open" << endl;
+            cout << "I think the hallway might be the right place to do that" << endl;
+        }else if(item=="Map of Wonderland" || itemID==3){//if you use the map.
+            cout << "You think to yourself, that is a nice place and it looks like I get there if I am small and use the key in a hallway" << endl;
+        }else if(item=="Orange Marmalade" || itemID==2){//if you use the marmalade
+            cout << "You think to yourself, that was tasty" << endl;
+        }else if(item=="pocket watch" || itemID==9){//if you use the pocket watch it gives you the current time.
+            auto start = chrono::system_clock::now();
+            auto legacyStart = chrono::system_clock::to_time_t(start);
+            cout << put_time(std::localtime(&legacyStart), "%H:%M") << endl;
+        }else if(item=="rabbits fan" || itemID==10){//using the fan
+            cout << "I think the rabbit dropped this but I can use it to cool down now" << endl;
+        }else if(item=="rabbits gloves" || itemID==11){//if you use the gloves
+            cout << "I think the rabbit dropped this but it looks nice on my hands" << endl;
+        }else{
+            cout << "this item cannot be used for anything or is being used wrong." << endl;
+        }
+
+        }
+
+            private:
+            Wonderland *game;
+            map<string, Location *> exits;
+            vector<Item> inventory;
+
+    };
+
+    int main() {
+        Wonderland wonderland;
+        Control control(&wonderland);
+        control.runGame();
+        return 0;
+    }
